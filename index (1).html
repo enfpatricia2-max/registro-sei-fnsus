@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Registro de Processos SEI — Força Nacional do SUS</title>
+<style>
+  :root{
+    --ink:#1c1c1a;
+    --muted:#6b6b66;
+    --line:#d8d8d3;
+    --bg:#f4f4f1;
+    --card:#ffffff;
+    --navy:#1f4e78;
+    --amber:#b8860b;
+    --amber-bg:#fbf1de;
+    --green:#2e7d4f;
+    --green-bg:#e9f4ee;
+    --red:#b03a2e;
+    --red-bg:#fbeae7;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family: Arial, Helvetica, sans-serif;
+    padding:32px 40px 60px;
+  }
+  .eyebrow{
+    font-size:11px;
+    letter-spacing:2px;
+    text-transform:uppercase;
+    color:var(--muted);
+  }
+  header{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    border-bottom:3px double var(--ink);
+    padding-bottom:14px;
+    margin-bottom:24px;
+  }
+  h1{
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size:34px;
+    margin:4px 0 6px;
+    font-weight:700;
+  }
+  .today{
+    font-size:13px;
+    color:var(--muted);
+    text-align:right;
+  }
+  .stats{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:16px;
+    margin-bottom:28px;
+  }
+  .stat{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:4px;
+    padding:16px 18px;
+  }
+  .stat .num{
+    font-family: Georgia, serif;
+    font-size:32px;
+    font-weight:700;
+    line-height:1;
+    margin-bottom:6px;
+  }
+  .stat .lab{
+    font-size:11px;
+    letter-spacing:1px;
+    text-transform:uppercase;
+    color:var(--muted);
+  }
+  .stat.pend .num{color:var(--amber);}
+  .stat.resp .num{color:var(--green);}
+  .layout{
+    display:grid;
+    grid-template-columns:340px 1fr;
+    gap:24px;
+    align-items:start;
+  }
+  .panel{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:4px;
+    padding:20px;
+  }
+  .panel h2{
+    font-size:15px;
+    margin:0 0 16px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .panel h2::before{
+    content:"";
+    width:8px;height:8px;
+    background:var(--navy);
+    display:inline-block;
+  }
+  label{
+    display:block;
+    font-size:10px;
+    letter-spacing:1px;
+    text-transform:uppercase;
+    color:var(--muted);
+    margin:14px 0 5px;
+  }
+  label:first-of-type{margin-top:0;}
+  input, select, textarea{
+    width:100%;
+    padding:9px 10px;
+    border:1px solid var(--line);
+    border-radius:3px;
+    font-size:13px;
+    font-family:inherit;
+    background:#fcfcfb;
+    color:var(--ink);
+  }
+  textarea{resize:vertical; min-height:60px;}
+  .row2{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+  .btn{
+    margin-top:18px;
+    width:100%;
+    padding:11px;
+    background:var(--navy);
+    color:#fff;
+    border:none;
+    border-radius:3px;
+    font-size:13px;
+    font-weight:bold;
+    cursor:pointer;
+    letter-spacing:.5px;
+  }
+  .btn:hover{background:#173c5c;}
+  .btn.secondary{
+    background:#fff;
+    color:var(--navy);
+    border:1px solid var(--navy);
+  }
+  .toolbar{
+    display:flex;
+    gap:10px;
+    margin-bottom:16px;
+    flex-wrap:wrap;
+  }
+  .toolbar input[type=text]{flex:2; min-width:200px;}
+  .toolbar select{flex:1; min-width:130px;}
+  .export{
+    background:#fff;
+    border:1px solid var(--line);
+    padding:9px 14px;
+    border-radius:3px;
+    font-size:12px;
+    cursor:pointer;
+    white-space:nowrap;
+  }
+  .export:hover{background:#f0f0ec;}
+  .empty{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:4px;
+    padding:60px 20px;
+    text-align:center;
+  }
+  .empty h3{font-family:Georgia,serif; margin:0 0 6px; font-size:18px;}
+  .empty p{color:var(--muted); font-size:13px; margin:0;}
+  .list{display:flex; flex-direction:column; gap:10px;}
+  .card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-left:4px solid var(--muted);
+    border-radius:4px;
+    padding:14px 16px;
+  }
+  .card.pendente{border-left-color:var(--amber);}
+  .card.respondido{border-left-color:var(--green);}
+  .card.atrasado{border-left-color:var(--red); background:var(--red-bg);}
+  .card-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:12px;
+  }
+  .card-top .titulo{font-weight:bold; font-size:14px;}
+  .card-top .sei{font-size:11px; color:var(--muted); margin-top:2px;}
+  .badge{
+    font-size:10px;
+    letter-spacing:.5px;
+    text-transform:uppercase;
+    padding:3px 8px;
+    border-radius:20px;
+    white-space:nowrap;
+    font-weight:bold;
+  }
+  .badge.pendente{background:var(--amber-bg); color:var(--amber);}
+  .badge.respondido{background:var(--green-bg); color:var(--green);}
+  .badge.atrasado{background:var(--red-bg); color:var(--red);}
+  .card-meta{
+    font-size:12px;
+    color:var(--muted);
+    margin-top:8px;
+    display:flex;
+    flex-wrap:wrap;
+    gap:4px 16px;
+  }
+  .card-assunto{
+    font-size:12.5px;
+    margin-top:8px;
+    color:#333;
+  }
+  .card-actions{
+    margin-top:10px;
+    display:flex;
+    gap:8px;
+  }
+  .card-actions button{
+    font-size:11px;
+    padding:5px 10px;
+    border-radius:3px;
+    border:1px solid var(--line);
+    background:#fff;
+    cursor:pointer;
+  }
+  .card-actions button:hover{background:#f0f0ec;}
+  .card-actions button.del{color:var(--red); border-color:var(--red-bg);}
+  footer.note{
+    margin-top:30px;
+    font-size:11px;
+    color:var(--muted);
+    text-align:center;
+  }
+  .backup-note{
+    background:#eaf1f7;
+    border:1px solid #c8dbe9;
+    border-radius:4px;
+    padding:10px 16px;
+    margin-bottom:18px;
+    font-size:12px;
+    color:var(--muted);
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:12px;
+    flex-wrap:wrap;
+  }
+  .backup-note strong{color:var(--navy);}
+  #fImportFile{display:none;}
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="eyebrow">Controle Interno · Protocolo</div>
+    <h1>Registro de Processos SEI</h1>
+    <div class="eyebrow">Força Nacional do SUS</div>
+  </div>
+  <div class="today" id="todayLabel"></div>
+</header>
+
+<div class="backup-note">
+  <div><strong>Uso pessoal:</strong> cada registro é salvo automaticamente só neste navegador, neste computador. <span id="lastSync"></span></div>
+  <div style="display:flex; gap:8px;">
+    <button type="button" class="export" id="btnImport">↑ Importar backup (CSV)</button>
+    <input type="file" id="fImportFile" accept=".csv">
+    <button type="button" class="export" id="btnExport2">↓ Exportar backup (CSV)</button>
+  </div>
+</div>
+
+<div class="stats">
+  <div class="stat">
+    <div class="num" id="statTotal">0</div>
+    <div class="lab">Processos Registrados</div>
+  </div>
+  <div class="stat pend">
+    <div class="num" id="statPend">0</div>
+    <div class="lab">Pendentes de Resposta</div>
+  </div>
+  <div class="stat resp">
+    <div class="num" id="statResp">0</div>
+    <div class="lab">Respondidos</div>
+  </div>
+  <div class="stat">
+    <div class="num" id="statMedio">—</div>
+    <div class="lab">Tempo Médio de Resposta (dias)</div>
+  </div>
+</div>
+
+<div class="layout">
+  <div class="panel">
+    <h2>Novo registro</h2>
+    <form id="form">
+      <label>Nº do Processo SEI</label>
+      <input type="text" id="fSei" placeholder="00000.000000/2026-00">
+
+      <label>Data de Recebimento na FNS</label>
+      <input type="date" id="fRecebimento">
+
+      <label>Órgão Solicitante</label>
+      <input type="text" id="fOrgao" placeholder="Ex.: Ministério da Saúde">
+
+      <label>Título do Documento</label>
+      <input type="text" id="fTitulo" placeholder="Ex.: Ofício nº 123/2026">
+
+      <div class="row2">
+        <div>
+          <label>Tipo do Documento</label>
+          <select id="fTipo">
+            <option value="">Selecione o tipo...</option>
+            <option>Ofício</option>
+            <option>Memorando</option>
+            <option>Despacho</option>
+            <option>Nota Técnica</option>
+            <option>E-mail</option>
+            <option>Requerimento</option>
+            <option>Outro</option>
+          </select>
+        </div>
+        <div>
+          <label>Nº do Documento</label>
+          <input type="text" id="fNumDoc" placeholder="Ex.: 0056903357">
+        </div>
+      </div>
+
+      <label>Criador do Documento</label>
+      <input type="text" id="fCriador" placeholder="Ex.: patricia.reis">
+
+      <label>Assunto do Corpo do Documento</label>
+      <textarea id="fAssunto" placeholder="Resumo do que o documento trata..."></textarea>
+
+      <div class="row2">
+        <div>
+          <label>Data da Resposta</label>
+          <input type="date" id="fDataResposta">
+        </div>
+        <div>
+          <label>Assinatura</label>
+          <input type="text" id="fAssinatura" placeholder="Nome de quem assina">
+        </div>
+      </div>
+
+      <label>Revisado pelo Admin</label>
+      <input type="text" id="fRevisado" placeholder="Nome do admin que revisou">
+
+      <button type="submit" class="btn">Registrar processo</button>
+      <button type="button" class="btn secondary" id="clearForm" style="margin-top:8px;">Limpar formulário</button>
+    </form>
+  </div>
+
+  <div>
+    <div class="toolbar">
+      <input type="text" id="fBusca" placeholder="Buscar por órgão, título ou assunto...">
+      <select id="fFiltroStatus">
+        <option value="">Todos os status</option>
+        <option value="Pendente">Pendente</option>
+        <option value="Respondido">Respondido</option>
+        <option value="Atrasado">Atrasado (+10 dias)</option>
+      </select>
+      <select id="fFiltroTipo">
+        <option value="">Todos os tipos</option>
+        <option>Ofício</option>
+        <option>Memorando</option>
+        <option>Despacho</option>
+        <option>Nota Técnica</option>
+        <option>E-mail</option>
+        <option>Requerimento</option>
+        <option>Outro</option>
+      </select>
+      <select id="fOrdenar">
+        <option value="recente">Recebido: mais recente</option>
+        <option value="antigo">Recebido: mais antigo</option>
+      </select>
+      <button class="export" id="btnExport">↓ Exportar CSV (Excel)</button>
+    </div>
+
+    <div id="emptyState" class="empty">
+      <h3>Nenhum processo registrado ainda</h3>
+      <p>Use o formulário ao lado para lançar o primeiro processo da Força Nacional do SUS.</p>
+    </div>
+
+    <div id="list" class="list"></div>
+  </div>
+</div>
+
+<footer class="note">Ferramenta de uso pessoal — tudo fica salvo apenas neste navegador, neste computador. Use "Exportar backup" de vez em quando pra guardar uma cópia de segurança, e "Importar backup" se precisar restaurar num computador novo.</footer>
+
+<script>
+(function(){
+  var STORAGE_KEY = 'fnsus_registro_processos_sei_v1';
+  var mem = []; // fallback em memória caso o navegador bloqueie localStorage
+  var storageOK = true;
+
+  function loadData(){
+    try{
+      var raw = localStorage.getItem(STORAGE_KEY);
+      return raw ? JSON.parse(raw) : [];
+    }catch(e){
+      storageOK = false;
+      return mem;
+    }
+  }
+  function saveData(data){
+    try{
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    }catch(e){
+      storageOK = false;
+      mem = data;
+    }
+  }
+
+  var processos = loadData();
+
+  var SYNC_KEY = 'fnsus_registro_processos_sei_lastbackup_v1';
+  function getLastBackup(){
+    try{ return localStorage.getItem(SYNC_KEY); }catch(e){ return null; }
+  }
+  function setLastBackup(iso){
+    try{ localStorage.setItem(SYNC_KEY, iso); }catch(e){}
+  }
+  function renderLastBackup(){
+    var el = document.getElementById('lastSync');
+    var ts = getLastBackup();
+    if(ts){
+      var d = new Date(ts);
+      el.textContent = 'Último backup: ' + d.toLocaleDateString('pt-BR') + ' às ' + d.toLocaleTimeString('pt-BR').slice(0,5);
+    } else {
+      el.textContent = 'Nenhum backup feito ainda.';
+    }
+  }
+
+  var todayLabel = document.getElementById('todayLabel');
+  var hoje = new Date();
+  var dias = ['Domingo','Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sábado'];
+  var meses = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+  todayLabel.textContent = dias[hoje.getDay()] + ', ' + hoje.getDate() + ' de ' + meses[hoje.getMonth()] + ' de ' + hoje.getFullYear();
+
+  function diasEntre(a, b){
+    var d1 = new Date(a), d2 = new Date(b);
+    return Math.round((d2 - d1) / (1000*60*60*24));
+  }
+  function fmtData(iso){
+    if(!iso) return '—';
+    var p = iso.split('-');
+    return p[2] + '/' + p[1] + '/' + p[0];
+  }
+  function statusOf(p){
+    if(!p.dataResposta) {
+      if(p.dataRecebimento){
+        var d = diasEntre(p.dataRecebimento, new Date().toISOString().slice(0,10));
+        if(d > 10) return 'Atrasado';
+      }
+      return 'Pendente';
+    }
+    return 'Respondido';
+  }
+
+  function render(){
+    // stats
+    var total = processos.length;
+    var pend = processos.filter(function(p){ return !p.dataResposta; }).length;
+    var resp = processos.filter(function(p){ return !!p.dataResposta; }).length;
+    var temposResp = processos
+      .filter(function(p){ return p.dataResposta && p.dataRecebimento; })
+      .map(function(p){ return diasEntre(p.dataRecebimento, p.dataResposta); });
+    var media = temposResp.length ? (temposResp.reduce(function(a,b){return a+b;},0) / temposResp.length) : null;
+
+    document.getElementById('statTotal').textContent = total;
+    document.getElementById('statPend').textContent = pend;
+    document.getElementById('statResp').textContent = resp;
+    document.getElementById('statMedio').textContent = media !== null ? media.toFixed(1) : '—';
+
+    // filtros
+    var busca = document.getElementById('fBusca').value.toLowerCase().trim();
+    var fStatus = document.getElementById('fFiltroStatus').value;
+    var fTipo = document.getElementById('fFiltroTipo').value;
+    var ordenar = document.getElementById('fOrdenar').value;
+
+    var filtrados = processos.filter(function(p){
+      var st = statusOf(p);
+      if(fStatus && st !== fStatus) return false;
+      if(fTipo && p.tipo !== fTipo) return false;
+      if(busca){
+        var alvo = ((p.orgao||'') + ' ' + (p.titulo||'') + ' ' + (p.assunto||'')).toLowerCase();
+        if(alvo.indexOf(busca) === -1) return false;
+      }
+      return true;
+    });
+
+    filtrados.sort(function(a,b){
+      var da = a.dataRecebimento || '';
+      var db = b.dataRecebimento || '';
+      if(ordenar === 'recente') return db.localeCompare(da);
+      return da.localeCompare(db);
+    });
+
+    var listEl = document.getElementById('list');
+    var emptyEl = document.getElementById('emptyState');
+    listEl.innerHTML = '';
+
+    if(processos.length === 0){
+      emptyEl.style.display = 'block';
+      listEl.style.display = 'none';
+      return;
+    }
+    emptyEl.style.display = 'none';
+    listEl.style.display = 'flex';
+
+    if(filtrados.length === 0){
+      listEl.innerHTML = '<div class="empty"><h3>Nada encontrado</h3><p>Ajuste a busca ou os filtros.</p></div>';
+      return;
+    }
+
+    filtrados.forEach(function(p){
+      var st = statusOf(p);
+      var stClass = st === 'Atrasado' ? 'atrasado' : (st === 'Respondido' ? 'respondido' : 'pendente');
+      var div = document.createElement('div');
+      div.className = 'card ' + stClass;
+      div.innerHTML =
+        '<div class="card-top">' +
+          '<div>' +
+            '<div class="titulo">' + (p.titulo || '(sem título)') + '</div>' +
+            '<div class="sei">' + (p.sei || 'sem nº SEI') + (p.numDoc ? ' · Doc ' + p.numDoc : '') + '</div>' +
+          '</div>' +
+          '<span class="badge ' + stClass + '">' + st + '</span>' +
+        '</div>' +
+        '<div class="card-meta">' +
+          '<span>Órgão: ' + (p.orgao || '—') + '</span>' +
+          '<span>Tipo: ' + (p.tipo || '—') + '</span>' +
+          '<span>Recebido: ' + fmtData(p.dataRecebimento) + '</span>' +
+          '<span>Respondido: ' + fmtData(p.dataResposta) + '</span>' +
+          '<span>Criador: ' + (p.criador || '—') + '</span>' +
+        '</div>' +
+        (p.assunto ? '<div class="card-assunto">' + p.assunto + '</div>' : '') +
+        '<div class="card-actions">' +
+          (!p.dataResposta ? '<button data-action="responder" data-id="' + p.id + '">Marcar como respondido hoje</button>' : '') +
+          '<button data-action="excluir" data-id="' + p.id + '" class="del">Excluir</button>' +
+        '</div>';
+      listEl.appendChild(div);
+    });
+  }
+
+  document.getElementById('form').addEventListener('submit', function(e){
+    e.preventDefault();
+    var sei = document.getElementById('fSei').value.trim();
+    if(!sei){ alert('Informe o Nº do Processo SEI.'); return; }
+    var novo = {
+      id: Date.now().toString(36) + Math.random().toString(36).slice(2,6),
+      sei: sei,
+      dataRecebimento: document.getElementById('fRecebimento').value,
+      orgao: document.getElementById('fOrgao').value.trim(),
+      titulo: document.getElementById('fTitulo').value.trim(),
+      tipo: document.getElementById('fTipo').value,
+      numDoc: document.getElementById('fNumDoc').value.trim(),
+      criador: document.getElementById('fCriador').value.trim(),
+      assunto: document.getElementById('fAssunto').value.trim(),
+      dataResposta: document.getElementById('fDataResposta').value,
+      assinatura: document.getElementById('fAssinatura').value.trim(),
+      revisado: document.getElementById('fRevisado').value.trim(),
+      updatedAt: new Date().toISOString()
+    };
+    processos.push(novo);
+    saveData(processos);
+    document.getElementById('form').reset();
+    render();
+  });
+
+  document.getElementById('clearForm').addEventListener('click', function(){
+    document.getElementById('form').reset();
+  });
+
+  document.getElementById('list').addEventListener('click', function(e){
+    var btn = e.target.closest('button[data-action]');
+    if(!btn) return;
+    var id = btn.getAttribute('data-id');
+    var idx = processos.findIndex(function(p){ return p.id === id; });
+    if(idx === -1) return;
+    if(btn.getAttribute('data-action') === 'excluir'){
+      if(confirm('Excluir este processo do registro?')){
+        processos.splice(idx,1);
+        saveData(processos);
+        render();
+      }
+    } else if(btn.getAttribute('data-action') === 'responder'){
+      processos[idx].dataResposta = new Date().toISOString().slice(0,10);
+      processos[idx].updatedAt = new Date().toISOString();
+      saveData(processos);
+      render();
+    }
+  });
+
+  ['fBusca','fFiltroStatus','fFiltroTipo','fOrdenar'].forEach(function(id){
+    document.getElementById(id).addEventListener('input', render);
+    document.getElementById(id).addEventListener('change', render);
+  });
+
+  function exportarCSV(){
+    if(processos.length === 0){ alert('Nenhum processo pra exportar ainda.'); return; }
+    var headers = ['Nº do Processo SEI','Data de Recebimento na FNS','Órgão Solicitante','Título do Documento','Tipo do Documento','Nº do Documento','Criador do Documento','Assunto do Corpo do Documento','Data da Resposta','Assinatura','Revisado pelo Admin','Status'];
+    var linhas = [headers.join(';')];
+    processos.forEach(function(p){
+      var linha = [p.sei, fmtData(p.dataRecebimento), p.orgao, p.titulo, p.tipo, p.numDoc, p.criador, (p.assunto||'').replace(/;/g,','), fmtData(p.dataResposta), p.assinatura, p.revisado, statusOf(p)];
+      linhas.push(linha.map(function(v){ return '"' + (v||'').toString().replace(/"/g,'""') + '"'; }).join(';'));
+    });
+    var blob = new Blob(['﻿' + linhas.join('\r\n')], {type:'text/csv;charset=utf-8;'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'registro-processos-sei-' + new Date().toISOString().slice(0,10) + '.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+    setLastBackup(new Date().toISOString());
+    renderLastBackup();
+  }
+  document.getElementById('btnExport').addEventListener('click', exportarCSV);
+  document.getElementById('btnExport2').addEventListener('click', exportarCSV);
+
+  // ---- Importar backup CSV (restaurar num computador novo, por exemplo) ----
+  function parseCSV(text){
+    text = text.replace(/^﻿/, ''); // remove BOM
+    var linhas = text.split(/\r\n|\n/).filter(function(l){ return l.trim() !== ''; });
+    if(linhas.length === 0) return [];
+    var sep = linhas[0].indexOf(';') !== -1 ? ';' : ',';
+    function parseLinha(linha){
+      var campos = [], atual = '', dentroAspas = false;
+      for(var i=0;i<linha.length;i++){
+        var c = linha[i];
+        if(c === '"'){
+          if(dentroAspas && linha[i+1] === '"'){ atual += '"'; i++; }
+          else dentroAspas = !dentroAspas;
+        } else if(c === sep && !dentroAspas){
+          campos.push(atual); atual = '';
+        } else {
+          atual += c;
+        }
+      }
+      campos.push(atual);
+      return campos;
+    }
+    var headers = parseLinha(linhas[0]).map(function(h){ return h.trim().toLowerCase(); });
+    var rows = [];
+    for(var i=1;i<linhas.length;i++){
+      var campos = parseLinha(linhas[i]);
+      var obj = {};
+      headers.forEach(function(h, idx){ obj[h] = (campos[idx]||'').trim(); });
+      rows.push(obj);
+    }
+    return rows;
+  }
+
+  function brParaIso(data){
+    if(!data) return '';
+    var m = data.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+    if(m) return m[3] + '-' + m[2] + '-' + m[1];
+    if(/^\d{4}-\d{2}-\d{2}$/.test(data)) return data;
+    return '';
+  }
+
+  function achaCampo(obj){
+    for(var i=1;i<arguments.length;i++){
+      var k = arguments[i];
+      if(obj[k] !== undefined) return obj[k];
+    }
+    return '';
+  }
+
+  function importarCSV(texto){
+    var linhas = parseCSV(texto);
+    if(linhas.length === 0){ alert('Não encontrei registros nesse CSV.'); return; }
+    var novos = 0, atualizados = 0;
+    linhas.forEach(function(row){
+      var sei = achaCampo(row, 'nº do processo sei', 'no do processo sei', 'processo sei', 'sei');
+      if(!sei) return;
+      var item = {
+        sei: sei,
+        dataRecebimento: brParaIso(achaCampo(row, 'data de recebimento na fns', 'data recebimento')),
+        orgao: achaCampo(row, 'órgão solicitante', 'orgao solicitante'),
+        titulo: achaCampo(row, 'título do documento', 'titulo do documento'),
+        tipo: achaCampo(row, 'tipo do documento'),
+        numDoc: achaCampo(row, 'nº do documento', 'no do documento'),
+        criador: achaCampo(row, 'criador do documento'),
+        assunto: achaCampo(row, 'assunto do corpo do documento'),
+        dataResposta: brParaIso(achaCampo(row, 'data da resposta')),
+        assinatura: achaCampo(row, 'assinatura'),
+        revisado: achaCampo(row, 'revisado pelo admin')
+      };
+      item.updatedAt = new Date().toISOString();
+      var existente = processos.find(function(p){ return p.sei === sei; });
+      if(existente){
+        Object.assign(existente, item);
+        atualizados++;
+      } else {
+        item.id = Date.now().toString(36) + Math.random().toString(36).slice(2,6) + novos;
+        processos.push(item);
+        novos++;
+      }
+    });
+    saveData(processos);
+    render();
+    alert('Restaurado! ' + novos + ' processo(s) novo(s) e ' + atualizados + ' atualizado(s).');
+  }
+
+  document.getElementById('btnImport').addEventListener('click', function(){
+    document.getElementById('fImportFile').click();
+  });
+  document.getElementById('fImportFile').addEventListener('change', function(e){
+    var file = e.target.files[0];
+    if(!file) return;
+    var reader = new FileReader();
+    reader.onload = function(ev){ importarCSV(ev.target.result); };
+    reader.readAsText(file, 'UTF-8');
+    e.target.value = '';
+  });
+
+  renderLastBackup();
+  render();
+})();
+</script>
+
+</body>
+</html>
